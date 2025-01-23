@@ -89,6 +89,7 @@ class GameConnection with ChangeNotifier {
   ConnectionCompletionState completionState = ConnectionCompletionState.notificationSent;
   ConnectionErrorType? errorType;
   ConnectionActiveState? activeState;
+  Exception? exception;
 
   void markComplete(ConnectionCompletionState state) {
     completionState = state;
@@ -100,14 +101,16 @@ class GameConnection with ChangeNotifier {
     notifyListeners();
   }
 
-  void markConnectionError(ConnectionErrorType error) {
+  void markConnectionError(ConnectionErrorType error, [Exception? exception]) {
     errorType = error;
+    this.exception = exception;
     notifyListeners();
   }
 
   Future<void> simulateConnection() async {
+    markActive(ConnectionActiveState.sendingNotification);
     await Future.delayed(const Duration(seconds: 2));
-    markConnectionError(ConnectionErrorType.notificationSent);
+    markConnectionError(ConnectionErrorType.notificationSent, SendingNotificationException('Failed to send notification'));
     // markConnectionError(ConnectionErrorType.notificationSent);
     markActive(ConnectionActiveState.receivingNotification);
     await Future.delayed(const Duration(seconds: 2));
@@ -133,14 +136,16 @@ var theme = ThemeData(
   useMaterial3: true,
 );
 
+final connection = GameConnection();
+
 class EventProgress extends StatelessWidget {
   const EventProgress({super.key});
 
   @override
   Widget build(BuildContext context) {
     theme = Theme.of(context);
-    return ChangeNotifierProvider(
-      create: (_) => GameConnection(),
+    return ChangeNotifierProvider.value(
+      value: connection,
       child: Consumer<GameConnection>(
         builder: (context, connection, _) => Scaffold(
           body: Column(
@@ -157,13 +162,13 @@ class EventProgress extends StatelessWidget {
                   contentsBuilder: (context, index) {
                     switch (index) {
                       case 0:
-                        return _buildTimelineContent('Sending Notification', true, connection.errorType == ConnectionErrorType.notificationSent);
+                        return _buildTimelineContent('Sending Notification', true, connection.errorType == ConnectionErrorType.notificationSent, context);
                       case 1:
-                        return _buildTimelineContent('Friend Received Notification', connection.completionState.index >= ConnectionCompletionState.friendReceivedNotification.index, connection.errorType == ConnectionErrorType.receivingNotification);
+                        return _buildTimelineContent('Friend Received Notification', connection.completionState.index >= ConnectionCompletionState.friendReceivedNotification.index, connection.errorType == ConnectionErrorType.receivingNotification, context);
                       case 2:
-                        return _buildTimelineContent('Friend Joined Game', connection.completionState.index >= ConnectionCompletionState.friendJoinedGame.index, connection.errorType == ConnectionErrorType.joiningGame);
+                        return _buildTimelineContent('Friend Joined Game', connection.completionState.index >= ConnectionCompletionState.friendJoinedGame.index, connection.errorType == ConnectionErrorType.joiningGame, context);
                       case 3:
-                        return _buildTimelineContent('Friend Played First Move', connection.completionState == ConnectionCompletionState.friendPlayedFirstMove, connection.errorType == ConnectionErrorType.playingFirstMove);
+                        return _buildTimelineContent('Friend Played First Move', connection.completionState == ConnectionCompletionState.friendPlayedFirstMove, connection.errorType == ConnectionErrorType.playingFirstMove, context);
                       default:
                         return null;
                     }
@@ -196,7 +201,7 @@ class EventProgress extends StatelessWidget {
     );
   }
 
-  Widget _buildTimelineContent(String title, bool isComplete, bool hasError) {
+  Widget _buildTimelineContent(String title, bool isComplete, bool hasError, BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
       child: Container(
@@ -217,15 +222,45 @@ class EventProgress extends StatelessWidget {
           ],
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: AnimatedDefaultTextStyle(
-          curve: Curves.easeOutQuad,
-          duration: const Duration(milliseconds: 300),
-          style: TextStyle(
-            color: hasError ? theme.colorScheme.error : theme.colorScheme.onSurface,
-            fontWeight: isComplete ? FontWeight.w900 : FontWeight.normal,
-            fontSize: 16,
-          ),
-          child: Text(title),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedDefaultTextStyle(
+              curve: Curves.easeOutQuad,
+              duration: const Duration(milliseconds: 300),
+              style: TextStyle(
+                color: hasError ? theme.colorScheme.error : theme.colorScheme.onSurface,
+                fontWeight: isComplete ? FontWeight.w900 : FontWeight.normal,
+                fontSize: 16,
+              ),
+              child: Text(title),
+            ),
+            //icon button for dialog box in case of exception
+            if (hasError)
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: IconButton(
+                  icon: const Icon(Icons.error_outline),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text('Error'),
+                          content: Text(connection.exception.toString()),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Close'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+          ],
         ),
       ),
     );
