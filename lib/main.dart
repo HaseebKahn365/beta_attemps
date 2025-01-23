@@ -1,3 +1,4 @@
+import 'package:beta_attemps/event_progress.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -11,6 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -25,18 +27,6 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Material3 App'),
-      ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            // Add your onPressed code here!
-          },
-          child: const Text('Click me!'),
-        ),
-      ),
-    );
+    return const EventProgress();
   }
 }
