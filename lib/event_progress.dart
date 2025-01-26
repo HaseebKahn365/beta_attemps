@@ -1,142 +1,11 @@
 import 'dart:developer';
 
+import 'package:beta_attemps/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timelines_plus/timelines_plus.dart';
 
-//Throwing exceptions
-
-class SendingNotificationException implements Exception {
-  final String message;
-
-  SendingNotificationException(this.message);
-
-  @override
-  String toString() => "SendingNotificationException: $message";
-}
-
-class ReceivingNotificationException implements Exception {
-  final String message;
-
-  ReceivingNotificationException(this.message);
-
-  @override
-  String toString() => "ReceivingNotificationException: $message";
-}
-
-class JoiningGameException implements Exception {
-  final String message;
-
-  JoiningGameException(this.message);
-
-  @override
-  String toString() => "JoiningGameException: $message";
-}
-
-class RejectingGameException implements Exception {
-  final String message;
-
-  RejectingGameException(this.message);
-
-  @override
-  String toString() => "RejectingGameException: $message";
-}
-
-class PlayingFirstMoveException implements Exception {
-  final String message;
-
-  PlayingFirstMoveException(this.message);
-
-  @override
-  String toString() => "PlayingFirstMoveException: $message";
-}
-
-abstract class Connection {
-  void sendNotification(String message);
-  void friendReceivedNotification();
-  void friendJoinedGame();
-  void friendRejected();
-  void friendPlayedFirstMove();
-}
-
-enum ConnectionCompletionState {
-  notificationSent,
-  friendReceivedNotification,
-  friendJoinedGame,
-  friendRejected,
-  friendPlayedFirstMove,
-}
-
-//enums for active state
-enum ConnectionActiveState {
-  sendingNotification,
-  receivingNotification,
-  joiningGame,
-  rejectingGame,
-  playingFirstMove,
-}
-
-//enums for err
-enum ConnectionErrorType {
-  notificationSent,
-  receivingNotification,
-  joiningGame,
-  rejectingGame,
-  playingFirstMove,
-}
-
-class GameConnection with ChangeNotifier {
-  ConnectionCompletionState completionState = ConnectionCompletionState.notificationSent;
-  ConnectionErrorType? errorType;
-  ConnectionActiveState? activeState;
-  Exception? exception;
-
-  void markComplete(ConnectionCompletionState state) {
-    completionState = state;
-    notifyListeners();
-  }
-
-  void markActive(ConnectionActiveState state) {
-    activeState = state;
-    notifyListeners();
-  }
-
-  void markConnectionError(ConnectionErrorType error, [Exception? exception]) {
-    errorType = error;
-    this.exception = exception;
-    notifyListeners();
-  }
-
-  Future<void> simulateConnection() async {
-    markActive(ConnectionActiveState.sendingNotification);
-    await Future.delayed(const Duration(seconds: 2));
-    markConnectionError(ConnectionErrorType.notificationSent, SendingNotificationException('Failed to send notification'));
-    // markConnectionError(ConnectionErrorType.notificationSent);
-    markActive(ConnectionActiveState.receivingNotification);
-    await Future.delayed(const Duration(seconds: 2));
-
-    await Future.delayed(const Duration(seconds: 2));
-    markComplete(ConnectionCompletionState.friendReceivedNotification);
-    // setConnectionError(ConnectionErrorType.notificationSent);
-
-    // setConnectionError(ConnectionErrorType.receivingNotification);
-    await Future.delayed(const Duration(seconds: 2));
-    markActive(ConnectionActiveState.joiningGame);
-
-    await Future.delayed(const Duration(seconds: 2));
-    markComplete(ConnectionCompletionState.friendJoinedGame);
-
-    await Future.delayed(const Duration(seconds: 2));
-    markComplete(ConnectionCompletionState.friendPlayedFirstMove);
-  }
-}
-
-var theme = ThemeData(
-  colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-  useMaterial3: true,
-);
-
-final connection = GameConnection();
+CentralFacade centralFacade = CentralFacade();
 
 class EventProgress extends StatelessWidget {
   const EventProgress({super.key});
@@ -145,7 +14,7 @@ class EventProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     theme = Theme.of(context);
     return ChangeNotifierProvider.value(
-      value: connection,
+      value: CentralFacade.connection,
       child: Consumer<GameConnection>(
         builder: (context, connection, _) => Scaffold(
           body: Column(
@@ -191,9 +60,61 @@ class EventProgress extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => connection.simulateConnection(),
+                onPressed: () async {
+                  await centralFacade.processIncomingMessage({
+                    'message_type': 'please_play_with_me',
+                    'from': 'sender_token',
+                    'to': 'joiner_token',
+                    'time': DateTime.now().millisecondsSinceEpoch,
+                    'level_index': 1,
+                  });
+
+                  //lets mark an error in the connection
+
+                  await centralFacade.processIncomingMessage({
+                    'message_type': 'i_am_live',
+                    'from': 'joiner_token',
+                    'to': 'sender_token',
+                    'time': DateTime.now().millisecondsSinceEpoch,
+                    'level_index': 1,
+                  });
+
+                  await centralFacade.processIncomingMessage({
+                    'message_type': 'i_am_down',
+                    'from': 'joiner_token',
+                    'to': 'sender_token',
+                    'time': DateTime.now().millisecondsSinceEpoch,
+                    'level_index': 1,
+                  });
+                  CentralFacade.connection.markConnectionError(ConnectionErrorType.notificationSent, SendingNotificationException('Notification not sent'));
+
+                  await centralFacade.processIncomingMessage({
+                    'message_type': 'first_line_created',
+                    'from': 'joiner_token',
+                    'to': 'sender_token',
+                    'time': DateTime.now().millisecondsSinceEpoch,
+                    'level_index': 1,
+                  });
+                },
                 child: const Text('Start Connection'),
               ),
+
+              //another button to reset the central facade
+              ElevatedButton(
+                onPressed: () {
+                  centralFacade.resetToBasics();
+                },
+                child: const Text('Reset Connection'),
+              ),
+
+              //if an error has occured, show the leave game button
+              if (connection.errorType != null)
+                ElevatedButton(
+                  onPressed: () {
+                    centralFacade.resetToBasics();
+                  },
+                  child: const Text('Leave Game'),
+                ),
             ],
           ),
         ),
@@ -226,8 +147,8 @@ class EventProgress extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedDefaultTextStyle(
-              curve: Curves.easeOutQuad,
-              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInBack,
+              duration: const Duration(milliseconds: 250),
               style: TextStyle(
                 color: hasError ? theme.colorScheme.error : theme.colorScheme.onSurface,
                 fontWeight: isComplete ? FontWeight.w900 : FontWeight.normal,
@@ -247,7 +168,7 @@ class EventProgress extends StatelessWidget {
                       builder: (context) {
                         return AlertDialog(
                           title: const Text('Error'),
-                          content: Text(connection.exception.toString()),
+                          content: Text(CentralFacade.connection.exception.toString()),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
