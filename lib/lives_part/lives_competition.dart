@@ -64,10 +64,10 @@ class _LivesCollectionScreenState extends State<LivesCollectionScreen> {
         ));
       });
 
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      Future.delayed(const Duration(milliseconds: 1200), () {
         if (mounted) {
           setState(() {
-            _animations.removeWhere((anim) => DateTime.now().difference(anim.startTime).inMilliseconds >= 1000);
+            _animations.removeWhere((anim) => DateTime.now().difference(anim.startTime).inMilliseconds >= 1200);
           });
         }
       });
@@ -98,14 +98,26 @@ class _LivesCollectionScreenState extends State<LivesCollectionScreen> {
                   // For collecting animation (hearts going up)
                   child: Animate(
                 effects: const [
-                  ScaleEffect(begin: Offset(1.0, 1.0), end: Offset(0.5, 0.5), duration: Duration(milliseconds: 500)),
-                  MoveEffect(begin: Offset(0, 200), end: Offset(0, 0), duration: Duration(milliseconds: 1000), curve: Curves.easeInOut),
+                  ScaleEffect(
+                    begin: Offset(1.0, 1.0),
+                    end: Offset(0.5, 0.5),
+                    duration: Duration(milliseconds: 500),
+                  ),
+                  MoveEffect(begin: Offset(0, 200), end: Offset(0, 0), duration: Duration(milliseconds: 600), curve: Curves.easeInOut),
                 ],
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(Icons.favorite, color: Colors.red, size: 24).animate().moveX(begin: -100, end: 0, duration: 1000.ms, curve: Curves.easeInOut),
-                    const Icon(Icons.favorite, color: Colors.red, size: 24).animate().moveX(begin: 200, end: 0, duration: 1000.ms, curve: Curves.easeInOut),
+                    const Icon(Icons.favorite, color: Colors.red, size: 24).animate().moveX(begin: -100, end: 0, duration: 1000.ms, curve: Curves.easeInOut).fade(
+                          begin: 0.0,
+                          end: 1.0,
+                          duration: 100.ms,
+                        ),
+                    const Icon(Icons.favorite, color: Colors.red, size: 24).animate().moveX(begin: 200, end: 0, duration: 1000.ms, curve: Curves.easeInOut).fade(
+                          begin: 0.0,
+                          end: 1.0,
+                          duration: 100.ms,
+                        ),
                   ],
                 ),
               ));
@@ -114,14 +126,32 @@ class _LivesCollectionScreenState extends State<LivesCollectionScreen> {
                   // For returning animation (hearts going down)
                   child: Animate(
                 effects: const [
-                  ScaleEffect(begin: Offset(0.5, 0.5), end: Offset(1.0, 1.0), duration: Duration(milliseconds: 500)),
-                  MoveEffect(begin: Offset(0, 0), end: Offset(0, 200), duration: Duration(milliseconds: 1000), curve: Curves.easeInOut),
+                  ScaleEffect(
+                    begin: Offset(0.5, 0.5),
+                    end: Offset(1.0, 1.0),
+                    duration: Duration(milliseconds: 500),
+                  ),
+                  MoveEffect(begin: Offset(0, 0), end: Offset(0, 200), duration: Duration(milliseconds: 800), curve: Curves.easeInOut),
+//fade effect
+                  FadeEffect(
+                    begin: 1.0,
+                    end: 0.0,
+                    duration: Duration(milliseconds: 200),
+                  ),
                 ],
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(Icons.favorite, color: Colors.red, size: 24).animate().moveX(begin: 0, end: -100, duration: 1000.ms, curve: Curves.easeInOut),
-                    const Icon(Icons.favorite, color: Colors.red, size: 24).animate().moveX(begin: 0, end: 100, duration: 1000.ms, curve: Curves.easeInOut),
+                    const Icon(Icons.favorite, color: Colors.red, size: 24).animate().moveX(begin: 0, end: -100, duration: 1000.ms, curve: Curves.easeInOut).fade(
+                          begin: 0.0,
+                          end: 1.0,
+                          duration: 100.ms,
+                        ),
+                    const Icon(Icons.favorite, color: Colors.red, size: 24).animate().moveX(begin: 0, end: 100, duration: 1000.ms, curve: Curves.easeInOut).fade(
+                          begin: 0.0,
+                          end: 1.0,
+                          duration: 100.ms,
+                        ),
                   ],
                 ),
               ));
@@ -136,82 +166,81 @@ class _LivesCollectionScreenState extends State<LivesCollectionScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<LivesCollectionProvider>(context);
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: SizedBox(
-              width: constraints.maxWidth,
-              height: constraints.maxHeight,
-              child: Stack(
-                children: [
-                  // Main content
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Control buttons and central heart
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            GestureDetector(
-                              onTapDown: (_) => _performOperation(context, true),
-                              onLongPress: () => _startRapidFire(context, true),
-                              onLongPressUp: _stopRapidFire,
-                              onTapUp: (_) => _stopRapidFire(),
-                              child: _buildControlButton(Icons.upload, provider.canCollectLives()),
-                            ),
-                            const SizedBox(width: 16),
-                            Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                const Icon(Icons.favorite, color: Colors.red, size: 100),
-                                Text(
-                                  '${provider.collectedLives}',
-                                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 16),
-                            GestureDetector(
-                              onTapDown: (_) => _performOperation(context, false),
-                              onLongPress: () => _startRapidFire(context, false),
-                              onLongPressUp: _stopRapidFire,
-                              onTapUp: (_) => _stopRapidFire(),
-                              child: _buildControlButton(Icons.download, provider.canReturnLives()),
-                            ),
-                          ],
-                        ),
+      body: Container(
+        color: Colors.blue.withOpacity(0.1),
+        width: double.infinity,
+        height: double.infinity,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Stack(
+              children: [
+                // Main content
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Control buttons and central heart
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTapDown: (_) => _performOperation(context, true),
+                            onLongPress: () => _startRapidFire(context, true),
+                            onLongPressUp: _stopRapidFire,
+                            onTapUp: (_) => _stopRapidFire(),
+                            child: _buildControlButton(Icons.upload, provider.canCollectLives()),
+                          ),
+                          const SizedBox(width: 16),
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Icon(Icons.favorite, size: 100, color: Theme.of(context).primaryColor),
+                              Text(
+                                '${provider.collectedLives}',
+                                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).colorScheme.onPrimary,
+                                    ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 16),
+                          GestureDetector(
+                            onTapDown: (_) => _performOperation(context, false),
+                            onLongPress: () => _startRapidFire(context, false),
+                            onLongPressUp: _stopRapidFire,
+                            onTapUp: (_) => _stopRapidFire(),
+                            child: _buildControlButton(Icons.download, provider.canReturnLives()),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 32),
-                      // Player profiles
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            PlayerProfile(imageUrl: 'https://picsum.photos/200', lives: provider.myLives),
-                            PlayerProfile(imageUrl: 'https://picsum.photos/201', lives: provider.johnLives),
-                          ],
-                        ),
+                    ),
+                    const SizedBox(height: 32),
+                    // Player profiles
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          PlayerProfile(imageUrl: 'https://picsum.photos/200', lives: provider.myLives),
+                          PlayerProfile(imageUrl: 'https://picsum.photos/201', lives: provider.johnLives),
+                        ],
                       ),
-                    ],
-                  ),
-                  // Animated hearts layer
-                  Positioned(
-                    top: constraints.maxHeight * 0.3, // Adjust this value to position the hearts
-                    left: 0,
-                    right: 0,
-                    child: _buildAnimatingHearts(),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+                    ),
+                  ],
+                ),
+                // Animated hearts layer
+                Positioned(
+                  top: constraints.maxHeight * 0.3, // Adjust this value to position the hearts
+                  left: 0,
+                  right: 0,
+                  child: _buildAnimatingHearts(),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
