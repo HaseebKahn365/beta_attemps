@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:beta_attemps/event_progress.dart';
+import 'package:beta_attemps/lives_part/lives_competition.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -14,23 +15,24 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          brightness: Brightness.light,
+        title: 'Flutter Demo',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.deepPurple,
+            brightness: Brightness.light,
+          ),
+          useMaterial3: true,
         ),
-        useMaterial3: true,
-      ),
-      home: MainPage(),
-    );
+        // home: MainPage(),
+        home: const LivesCollection());
   }
 }
 
 // a global boolean change value notifier
 ValueNotifier<bool> isDark = ValueNotifier<bool>(false);
 
+// ignore: must_be_immutable
 class MainPage extends StatelessWidget {
   MainPage({super.key});
 
@@ -106,13 +108,13 @@ class _AwesomeSnackbarContentPageState extends State<AwesomeSnackbarContentPage>
       curve: Curves.linear,
       reverseCurve: Curves.linear,
     );
-    isDark.addListener(_themeChangeListener);
+    isDark.addListener(_messageListener);
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    isDark.removeListener(_themeChangeListener);
+    isDark.removeListener(_messageListener);
 
     log('dispose');
     super.dispose();
@@ -120,7 +122,7 @@ class _AwesomeSnackbarContentPageState extends State<AwesomeSnackbarContentPage>
 
   //add a listener to the global boolean change value notifier and show a snackbar whenever the value changes
 
-  void _themeChangeListener() {
+  void _messageListener() {
     if (mounted) {
       _showCustomSnackbar(context, 'Theme changed to ${isDark.value ? "dark" : "light"} mode');
     }
