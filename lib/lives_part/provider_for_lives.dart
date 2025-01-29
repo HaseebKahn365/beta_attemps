@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 
 class LivesCollectionProvider extends ChangeNotifier {
-  int myLives = 5;
-  int johnLives = 3;
+  int myLives = 50;
+  int johnLives = 30;
   int collectedLives = 0;
+  bool isAnimating = false;
 
-  bool canCollectLives() {
-    return myLives > 0 && johnLives > 0;
-  }
+  bool canCollectLives() => myLives > 0 && johnLives > 0 && !isAnimating;
+  bool canReturnLives() => collectedLives > 0 && !isAnimating;
 
-  bool canReturnLives() {
-    return collectedLives > 0;
+  void _setAnimating() {
+    isAnimating = true;
+    notifyListeners();
+    Future.delayed(const Duration(milliseconds: 600), () {
+      isAnimating = false;
+      notifyListeners();
+    });
   }
 
   void collectLives() {
@@ -18,7 +23,7 @@ class LivesCollectionProvider extends ChangeNotifier {
       myLives--;
       johnLives--;
       collectedLives += 2;
-      notifyListeners();
+      _setAnimating();
     }
   }
 
@@ -27,7 +32,7 @@ class LivesCollectionProvider extends ChangeNotifier {
       myLives++;
       johnLives++;
       collectedLives -= 2;
-      notifyListeners();
+      _setAnimating();
     }
   }
 }
