@@ -282,6 +282,7 @@ class _LivesCollectionScreenState extends State<LivesCollectionScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        border: Border.all(color: isActive ? Theme.of(context).colorScheme.primary.withOpacity(0.5) : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5)),
         color: isActive ? Theme.of(context).colorScheme.primary.withOpacity(0.1) : Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
