@@ -5,6 +5,20 @@ class LivesCollectionProvider extends ChangeNotifier {
   int johnLives = 30;
   int collectedLives = 0;
   bool isAnimating = false;
+  Exception? fetchLivesError;
+
+  bool fetchingLives = false;
+  void startFetchingLives() {
+    fetchingLives = true;
+    johnLives = 0;
+    notifyListeners();
+    Future.delayed(const Duration(seconds: 2), () {
+      fetchingLives = false;
+      johnLives = 30;
+      notifyListeners();
+      fetchLivesError = Exception('Failed to fetch lives');
+    });
+  }
 
   bool canCollectLives() => myLives > 0 && johnLives > 0 && !isAnimating;
   bool canReturnLives() => collectedLives > 0 && !isAnimating;

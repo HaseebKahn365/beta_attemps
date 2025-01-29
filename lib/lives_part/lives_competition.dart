@@ -164,10 +164,10 @@ class _LivesCollectionScreenState extends State<LivesCollectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<LivesCollectionProvider>(context);
+    final provider = globalProvider;
     return Scaffold(
-      body: Container(
-        color: Colors.blue.withOpacity(0.1),
+      body: SizedBox(
+        // color: Colors.blue.withOpacity(0.1),
         width: double.infinity,
         height: double.infinity,
         child: LayoutBuilder(
@@ -195,7 +195,7 @@ class _LivesCollectionScreenState extends State<LivesCollectionScreen> {
                           Stack(
                             alignment: Alignment.center,
                             children: [
-                              Icon(Icons.favorite, size: 100, color: Theme.of(context).primaryColor),
+                              Icon(Icons.favorite, size: 100, color: Theme.of(context).colorScheme.primary),
                               Text(
                                 '${provider.collectedLives}',
                                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
@@ -223,8 +223,32 @@ class _LivesCollectionScreenState extends State<LivesCollectionScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          PlayerProfile(imageUrl: 'https://picsum.photos/200', lives: provider.myLives),
-                          PlayerProfile(imageUrl: 'https://picsum.photos/201', lives: provider.johnLives),
+                          Column(
+                            children: [
+                              PlayerProfile(imageUrl: 'https://picsum.photos/200', lives: provider.myLives),
+                              const SizedBox(height: 8),
+                              Text(
+                                provider.myLives.toString(),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              PlayerProfile(imageUrl: 'https://picsum.photos/201', lives: provider.johnLives),
+                              const SizedBox(height: 8),
+                              (provider.fetchingLives)
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeCap: StrokeCap.round,
+                                      ),
+                                    )
+                                  : Text(
+                                      provider.johnLives.toString(),
+                                    )
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -236,6 +260,15 @@ class _LivesCollectionScreenState extends State<LivesCollectionScreen> {
                   left: 0,
                   right: 0,
                   child: _buildAnimatingHearts(),
+                ),
+                Positioned(
+                  bottom: 16,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      provider.startFetchingLives();
+                    },
+                    child: const Text('Start fetching lives'),
+                  ),
                 ),
               ],
             );
@@ -249,10 +282,10 @@ class _LivesCollectionScreenState extends State<LivesCollectionScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isActive ? Colors.blue.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+        color: isActive ? Theme.of(context).colorScheme.primary.withOpacity(0.1) : Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, color: isActive ? Colors.blue : Colors.grey),
+      child: Icon(icon, color: isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant),
     );
   }
 }
@@ -291,35 +324,28 @@ class BuildLives extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(
-            5,
-            (index) => Animate(
-              effects: [
-                if (index < lives)
-                  const ScaleEffect(begin: Offset(0.8, 0.8), end: Offset(1.0, 1.0), duration: Duration(milliseconds: 200))
-                else
-                  const FadeEffect(
-                    begin: 1.0,
-                    end: 0.3,
-                    duration: Duration(milliseconds: 200),
-                  ),
-              ],
-              child: Icon(
-                index < lives ? Icons.favorite : Icons.favorite_border,
-                color: Colors.red,
-                size: index < lives ? 20 : 16,
+      children: List.generate(
+        5,
+        (index) => Animate(
+          effects: [
+            if (index < lives)
+              const ScaleEffect(begin: Offset(0.8, 0.8), end: Offset(1.0, 1.0), duration: Duration(milliseconds: 200))
+            else
+              const FadeEffect(
+                begin: 1.0,
+                end: 0.3,
+                duration: Duration(milliseconds: 200),
               ),
-            ),
+          ],
+          child: Icon(
+            index < lives ? Icons.favorite : Icons.favorite_border,
+            color: Theme.of(context).colorScheme.primary,
+            size: index < lives ? 20 : 16,
           ),
         ),
-        const SizedBox(height: 8),
-        Text('$lives'),
-      ],
+      ),
     );
   }
 }
