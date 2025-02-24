@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:beta_attemps/ultimate_provider/ultimate_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
@@ -16,22 +17,39 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => themeProvider),
-      ],
-      child: MaterialApp(
+    return ChangeNotifierProvider.value(
+      value: themeProvider,
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProviderWatch, _) => MaterialApp(
           title: 'Flutter Demo',
           debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple,
-              brightness: Brightness.light,
-            ),
-            useMaterial3: true,
+          theme: themeProviderWatch.theme,
+          home: UltimateProviderScreen(provider: ultimateProvider),
+        ),
+      ),
+    );
+  }
+}
+
+class Button extends StatelessWidget {
+  const Button({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: ElevatedButton(
+        onPressed: () {
+          themeProvider.randomizeTheme();
+        },
+        child: const Text(
+          'Change Theme',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
           ),
-          // home: MainPage(),
-          home: const UltimateProviderApp()),
+        ),
+      ),
     );
   }
 }
@@ -82,42 +100,6 @@ class ThemeProvider extends ChangeNotifier {
     final random = Random();
     _primaryColor = _colors[random.nextInt(_colors.length)];
     notifyListeners();
-  }
-}
-
-//a basic Ultimate provider page
-
-class UltimateProviderApp extends StatelessWidget {
-  const UltimateProviderApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: ChangeNotifierProvider.value(
-            value: themeProvider,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Ultimate Provider',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                IconButton(
-                    onPressed: () {
-                      themeProvider.randomizeTheme();
-                    },
-                    icon: const Icon(
-                      Icons.ac_unit_rounded,
-                    ))
-              ],
-            )),
-      ),
-    );
   }
 }
 
