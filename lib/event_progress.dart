@@ -1,6 +1,6 @@
 import 'dart:developer';
 
-import 'package:beta_attemps/notification_service.dart';
+import 'package:beta_attemps/lives_part/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timelines_plus/timelines_plus.dart';
