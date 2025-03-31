@@ -1,35 +1,34 @@
 import 'dart:math';
 
-import 'package:beta_attemps/ultimate_provider/ultimate_provider.dart';
+import 'package:beta_attemps/testing_haptics/haptics_home_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:provider/provider.dart';
 
 final themeProvider = ThemeProvider();
 
 void main() {
-  debugRepaintRainbowEnabled = true;
+  // debugRepaintRainbowEnabled = true;
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+// class MyApp extends StatelessWidget {
+//   const MyApp({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: themeProvider,
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProviderWatch, _) => MaterialApp(
-          title: 'Flutter Demo',
-          debugShowCheckedModeBanner: false,
-          theme: themeProviderWatch.theme,
-          home: UltimateProviderScreen(provider: ultimateProvider),
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return ChangeNotifierProvider.value(
+//       value: themeProvider,
+//       child: Consumer<ThemeProvider>(
+//         builder: (context, themeProviderWatch, _) => MaterialApp(
+//           title: 'Flutter Demo',
+//           debugShowCheckedModeBanner: false,
+//           theme: themeProviderWatch.theme,
+//           // home: UltimateProviderScreen(provider: ultimateProvider),
+//           home: const MyApp(),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 class Button extends StatelessWidget {
   const Button({
