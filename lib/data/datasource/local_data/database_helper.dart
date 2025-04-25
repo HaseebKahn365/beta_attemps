@@ -1,13 +1,15 @@
+import 'package:beta_attemps/data/models/note.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
   static final instance = DatabaseHelper._instance();
-  static Database? _db;
+  static Database? db;
   static late DatabaseHelper _databaseHelper;
 
   DatabaseHelper._instance() {
+    initDB();
     _databaseHelper = this;
-    _initDB();
   }
 
   factory DatabaseHelper() => instance;
@@ -18,24 +20,45 @@ class DatabaseHelper {
   final text = 'text';
   final date = 'date';
 
-  Future<Database> _initDB() async {
-    if (_db != null) return _db!;
-    _db = await openDatabase('notes.db');
-    return _db!;
+  Future<Database?> initDB() async {
+    final documentsDirectory = await getApplicationDocumentsDirectory();
+    final path = '${documentsDirectory.path}note.db';
+    db = await openDatabase(path, version: 1, onOpen: (db) {},
+        onCreate: (db, version) async {
+      await db.execute('''
+        create table $tableName (
+        $id integer primary key autoincrement,
+        $title text not null,
+        $text text not null,
+        $date INTEGER not null
+        ) ''');
+    });
+    return db;
   }
 
-  Future<int> insertNote(Map<String, dynamic> note) async {
-    final db = await _initDB();
-    return await db.insert(tableName, note);
+  Future<Note> add(Note note) async {
+    note.id = (await db?.insert(tableName, note.toJson()))!;
+    return note;
   }
 
-  Future<List<Map<String, dynamic>>> fetchNotes() async {
-    final db = await _initDB();
-    return await db.query(tableName);
+  Future<List<Note>> fetch() async {
+    final maps = await db!.query(tableName);
+
+    return List.generate(maps.length, (i) {
+      return Note.fromJson(Map<String, dynamic>.from(maps[i]));
+    });
   }
 
-  Future<int> deleteNote(int id) async {
-    final db = await _initDB();
-    return await db.delete(tableName, where: '$id = ?', whereArgs: [id]);
+  Future<int?> update(Note note) async {
+    return await db?.update(tableName, note.toJson(),
+        where: '$id = ?', whereArgs: [note.id]);
+  }
+
+  Future<int?> delete(int noteId) async {
+    return await db?.delete(
+      tableName,
+      where: '$id = ?',
+      whereArgs: [noteId],
+    );
   }
 }

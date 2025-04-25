@@ -11,3 +11,10 @@ class FetchNote {
   Future<Either<Failure, List<NoteEntity>>> execute() =>
       repository.fetchNotes();
 }
+
+class AddNote {
+  final NoteRepository repository;
+  AddNote(this.repository);
+  Future<Either<Failure, NoteEntity>> execute(NoteEntity note) =>
+      repository.addNote(note);
+}
