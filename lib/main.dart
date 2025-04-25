@@ -1,56 +1,35 @@
+import 'package:beta_attemps/data/datasource/local_data/database_helper.dart';
+import 'package:beta_attemps/presentation/bloc/note_bloc.dart';
+import 'package:beta_attemps/presentation/pages/home_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  // debugRepaintRainbowEnabled = true;
+import 'injection.dart' as di;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final db = DatabaseHelper();
+  await db.initDB();
+  await di.init();
+
   runApp(const MyApp());
 }
-
-//simple app
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-//Home page about learning clean Architectue
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Clean Architecture',
-            ),
-          ],
-        ),
+    return MultiProvider(
+      providers: [BlocProvider(create: (_) => di.locator<NoteBloc>())],
+      child: const MaterialApp(
+        title: 'Flutter Note App',
+        debugShowCheckedModeBanner: false,
+        home: HomePage(),
       ),
     );
   }
